@@ -1,0 +1,14 @@
+# Compilados Java
+out/
+target/
+build/
+
+# Logs
+*.log
+
+# Configuración sensible
+src/config/database.properties
+
+# Sistema
+.DS_Store
+Thumbs.db
