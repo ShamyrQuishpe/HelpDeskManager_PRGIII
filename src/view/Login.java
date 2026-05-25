@@ -53,7 +53,7 @@ public class Login {
         JFrame frame = new JFrame();
 
         // CLIENTE
-        if(usuario.getRol().equals("ADMIN")) {
+        if(usuario.getRol().equals("CLIENTE")) {
 
             VentanaUsuario ventana = new VentanaUsuario(usuario);
 
@@ -65,22 +65,17 @@ public class Login {
         }
 
         // ADMIN
-        /*else if(usuario.getRol().equals("ADMIN")) {
+        else if(usuario.getRol().equals("ADMIN")) {
 
-            VentanaAdmin ventana =
-                    new VentanaAdmin(usuario);
+            VentanaAdmin ventana = new VentanaAdmin(usuario);
 
-            frame.setTitle(
-                    "Panel Administrador"
-            );
+            frame.setTitle("Panel Administrador");
 
-            frame.setContentPane(
-                    ventana.panel1
-            );
+            frame.setContentPane(ventana.panelAdmin);
         }
 
         // TECNICO
-        else if(usuario.getRol().equals("TECNICO")) {
+        /*else if(usuario.getRol().equals("TECNICO")) {
 
             VentanaTecnico ventana =
                     new VentanaTecnico(usuario);

@@ -169,4 +169,65 @@ public class UsuarioDAO {
         }
     }
 
+    // BUSCAR POR ID
+    public Usuario buscarPorId(int idUsuario){
+
+        Usuario usuario = null;
+
+        try{
+
+            String sql = "SELECT * FROM usuarios WHERE id_usuario = ?";
+
+            PreparedStatement ps = conexion.prepareStatement(sql);
+
+            ps.setInt(1, idUsuario);
+
+            ResultSet rs = ps.executeQuery();
+
+            if(rs.next()){
+
+                usuario = new Usuario(
+
+                        rs.getInt("id_usuario"),
+
+                        rs.getString("nombre"),
+
+                        rs.getString("correo"),
+
+                        rs.getString("password"),
+
+                        rs.getString("rol")
+                );
+            }
+
+        }
+        catch(Exception e){
+
+            e.printStackTrace();
+        }
+
+        return usuario;
+    }
+
+    //Eliminar por ID
+    public void eliminar(int idUsuario){
+
+        try{
+
+            String sql = "DELETE FROM usuarios WHERE id_usuario = ?";
+
+            PreparedStatement ps = conexion.prepareStatement(sql);
+
+            ps.setInt(1, idUsuario);
+
+            ps.executeUpdate();
+
+            System.out.println("Usuario eliminado");
+        }
+        catch(Exception e){
+
+            e.printStackTrace();
+        }
+    }
+
 }
