@@ -2,12 +2,16 @@ package view;
 
 import dao.UsuarioDAO;
 import model.Usuario;
+import dao.TicketDAO;
+import model.Ticket;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 public class VentanaAdmin {
     private JTabbedPane tabbedPane1;
@@ -28,7 +32,17 @@ public class VentanaAdmin {
     private JButton buscarPorIDButton;
     private JComboBox cmbRolUsuario;
     private JComboBox cmbRolUsuarioMod;
-    private JTabbedPane tabbedPane3;
+    private JPanel panelTicketsAdmin;
+    private JList lstTicketsAdmin;
+    private JTextField txtIdTicketAdmin;
+    private JButton btnBuscarTicketAdmin;
+    private JComboBox cmbEstadoTicketAdmin;
+    private JComboBox cmbPrioridadTicketAdmin;
+    private JButton btnActualizarTicketAdmin;
+    private JButton btnListarTicketsAdmin;
+    private JButton btnEliminarTicketAdmin;
+    private Ticket ticketActual;
+    private boolean editandoTicket = false;
 
     private Usuario usuarioActual;
 
@@ -74,6 +88,64 @@ public class VentanaAdmin {
             @Override
             public void actionPerformed(ActionEvent e) {
                 eliminarUsuario();
+            }
+        });
+        // INICIALIZACIÓN TICKETS
+        inicializarComboBoxesTickets();
+        bloquearCamposTicket();
+
+        // EVENTOS TICKETS
+        btnListarTicketsAdmin.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                listarTicketsAdmin();
+            }
+        });
+
+        btnBuscarTicketAdmin.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                buscarTicketAdmin();
+            }
+        });
+
+        btnActualizarTicketAdmin.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                actualizarTicketAdmin();
+            }
+        });
+
+        btnEliminarTicketAdmin.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                eliminarTicketAdmin();
+            }
+        });
+
+        // EVENTO: AL HACER CLIC EN UN TICKET DE LA LISTA
+        lstTicketsAdmin.addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                // Verificar que la selección haya terminado y no sea nula
+                if (!e.getValueIsAdjusting() && lstTicketsAdmin.getSelectedValue() != null) {
+                    String ticketSeleccionado = lstTicketsAdmin.getSelectedValue().toString();
+
+                    try {
+                        // El texto tiene el formato "ID: 5 | ID Usuario: 2 | ..."
+                        // Separamos por el símbolo "|" y tomamos la primera parte ("ID: 5 ")
+                        String primeraParte = ticketSeleccionado.split("\\|")[0];
+
+                        // Quitamos la palabra "ID:" y los espacios para quedarnos solo con el número
+                        String idExtraido = primeraParte.replace("ID:", "").trim();
+
+                        // Lo ponemos en el campo de texto
+                        txtIdTicketAdmin.setText(idExtraido);
+
+                    } catch (Exception ex) {
+                        System.out.println("No se pudo extraer el ID del texto seleccionado.");
+                    }
+                }
             }
         });
     }
@@ -230,6 +302,142 @@ public class VentanaAdmin {
 
         cmbRolUsuarioMod.setEnabled(true);
     }
+    // ------------------------------------------
+    // LÓGICA DE TICKETS
+    // ------------------------------------------
+
+    // INICIALIZAR COMBOBOXES DE TICKET
+    private void inicializarComboBoxesTickets() {
+        cmbEstadoTicketAdmin.addItem("ABIERTO");
+        cmbEstadoTicketAdmin.addItem("CERRADO");
+
+        cmbPrioridadTicketAdmin.addItem("BAJA");
+        cmbPrioridadTicketAdmin.addItem("MEDIA");
+        cmbPrioridadTicketAdmin.addItem("ALTA");
+        cmbPrioridadTicketAdmin.addItem("CRITICA");
+    }
+
+    // BLOQUEAR/DESBLOQUEAR
+    private void bloquearCamposTicket() {
+        cmbEstadoTicketAdmin.setEnabled(false);
+        cmbPrioridadTicketAdmin.setEnabled(false);
+    }
+
+
+    // LISTAR TICKETS
+    private void listarTicketsAdmin() {
+        TicketDAO dao = new TicketDAO();
+        ArrayList<Ticket> lista = dao.obtenerTickets();
+        DefaultListModel modelo = new DefaultListModel();
+
+        for (Ticket t : lista) {
+            // Personalizamos el texto para que incluya el ID del Usuario (t.getIdUsuario())
+            String infoTicket = "ID: " + t.getIdTicket() +
+                    " | ID Usuario: " + t.getIdUsuario() +
+                    " | " + t.getTitulo() +
+                    " | Prioridad: " + t.getPrioridad() +
+                    " | Estado: " + t.getEstado();
+
+            modelo.addElement(infoTicket);
+        }
+
+        lstTicketsAdmin.setModel(modelo);
+    }
+
+    // BUSCAR TICKET
+    private void buscarTicketAdmin() {
+        try {
+            int id = Integer.parseInt(txtIdTicketAdmin.getText());
+            TicketDAO dao = new TicketDAO();
+
+            // Como TicketDAO no tiene buscarPorId, filtramos la lista completa
+            ArrayList<Ticket> todos = dao.obtenerTickets();
+            ticketActual = null;
+
+            for (Ticket t : todos) {
+                if (t.getIdTicket() == id) {
+                    ticketActual = t;
+                    break;
+                }
+            }
+
+            if (ticketActual != null) {
+                cmbEstadoTicketAdmin.setSelectedItem(ticketActual.getEstado());
+                cmbPrioridadTicketAdmin.setSelectedItem(ticketActual.getPrioridad());
+
+                bloquearCamposTicket();
+                JOptionPane.showMessageDialog(null, "Ticket encontrado");
+            } else {
+                JOptionPane.showMessageDialog(null, "Ticket no encontrado");
+                ticketActual = null;
+            }
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(null, "Por favor, ingrese un ID válido (número).");
+        }
+    }
+
+    // DESBLOQUEAR
+    private void desbloquearCamposTicket() {
+        cmbEstadoTicketAdmin.setEnabled(true);
+        cmbPrioridadTicketAdmin.setEnabled(true); // <-- Ahora también se habilita la prioridad
+    }
+
+    // ACTUALIZAR TICKET (ESTADO Y PRIORIDAD)
+    private void actualizarTicketAdmin() {
+        if (ticketActual == null) {
+            JOptionPane.showMessageDialog(null, "Primero busque un ticket por ID.");
+            return;
+        }
+
+        // PRIMER CLICK
+        if (!editandoTicket) {
+            int opcion = JOptionPane.showConfirmDialog(null, "¿Deseas modificar el estado y la prioridad de este ticket?", "Confirmación", JOptionPane.YES_NO_OPTION);
+
+            if (opcion == JOptionPane.YES_OPTION) {
+                desbloquearCamposTicket();
+                editandoTicket = true;
+                btnActualizarTicketAdmin.setText("Guardar Cambios");
+            }
+        }
+        // SEGUNDO CLICK
+        else {
+            String nuevoEstado = cmbEstadoTicketAdmin.getSelectedItem().toString();
+            String nuevaPrioridad = cmbPrioridadTicketAdmin.getSelectedItem().toString(); // <-- Obtenemos la prioridad
+            TicketDAO dao = new TicketDAO();
+
+            // Usamos el nuevo método que creamos en TicketDAO
+            dao.cambiarEstadoYPrioridad(ticketActual.getIdTicket(), nuevoEstado, nuevaPrioridad);
+
+            bloquearCamposTicket();
+            editandoTicket = false;
+            btnActualizarTicketAdmin.setText("Actualizar Ticket");
+
+            JOptionPane.showMessageDialog(null, "Ticket actualizado exitosamente");
+            listarTicketsAdmin(); // Refresca la lista
+        }
+    }
+
+    // ELIMINAR TICKET
+    private void eliminarTicketAdmin() {
+        try {
+            int id = Integer.parseInt(txtIdTicketAdmin.getText());
+            int confirmacion = JOptionPane.showConfirmDialog(null, "¿Seguro deseas eliminar este ticket permanentemente?", "Confirmación", JOptionPane.YES_NO_OPTION);
+
+            if (confirmacion == JOptionPane.YES_OPTION) {
+                TicketDAO dao = new TicketDAO();
+                dao.eliminarTicket(id);
+
+                JOptionPane.showMessageDialog(null, "Ticket eliminado");
+                listarTicketsAdmin(); // Refrescar lista
+                txtIdTicketAdmin.setText("");
+                ticketActual = null;
+                bloquearCamposTicket();
+            }
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(null, "Por favor, ingrese un ID válido (número).");
+        }
+    }
+
 
     {
 // GUI initializer generated by IntelliJ IDEA GUI Designer
@@ -321,11 +529,40 @@ public class VentanaAdmin {
         panel2.add(buscarPorIDButton, new com.intellij.uiDesigner.core.GridConstraints(1, 0, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         cmbRolUsuarioMod = new JComboBox();
         panel2.add(cmbRolUsuarioMod, new com.intellij.uiDesigner.core.GridConstraints(5, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        tabbedPane3 = new JTabbedPane();
-        tabbedPane1.addTab("Ticket", tabbedPane3);
-        final JPanel panel3 = new JPanel();
-        panel3.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
-        tabbedPane3.addTab("Untitled", panel3);
+        panelTicketsAdmin = new JPanel();
+        panelTicketsAdmin.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(6, 3, new Insets(10, 10, 10, 10), -1, -1));
+        tabbedPane1.addTab("Tickets", panelTicketsAdmin);
+        final JScrollPane scrollPane1 = new JScrollPane();
+        panelTicketsAdmin.add(scrollPane1, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 5, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(220, 150), null, 0, false));
+        lstTicketsAdmin = new JList();
+        scrollPane1.setViewportView(lstTicketsAdmin);
+        final JLabel label10 = new JLabel();
+        label10.setText("ID Ticket:");
+        panelTicketsAdmin.add(label10, new com.intellij.uiDesigner.core.GridConstraints(0, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        txtIdTicketAdmin = new JTextField();
+        panelTicketsAdmin.add(txtIdTicketAdmin, new com.intellij.uiDesigner.core.GridConstraints(0, 2, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        btnBuscarTicketAdmin = new JButton();
+        btnBuscarTicketAdmin.setText("Buscar por ID");
+        panelTicketsAdmin.add(btnBuscarTicketAdmin, new com.intellij.uiDesigner.core.GridConstraints(1, 1, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label11 = new JLabel();
+        label11.setText("Estado:");
+        panelTicketsAdmin.add(label11, new com.intellij.uiDesigner.core.GridConstraints(2, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        cmbEstadoTicketAdmin = new JComboBox();
+        panelTicketsAdmin.add(cmbEstadoTicketAdmin, new com.intellij.uiDesigner.core.GridConstraints(2, 2, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label12 = new JLabel();
+        label12.setText("Prioridad:");
+        panelTicketsAdmin.add(label12, new com.intellij.uiDesigner.core.GridConstraints(3, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        cmbPrioridadTicketAdmin = new JComboBox();
+        panelTicketsAdmin.add(cmbPrioridadTicketAdmin, new com.intellij.uiDesigner.core.GridConstraints(3, 2, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        btnActualizarTicketAdmin = new JButton();
+        btnActualizarTicketAdmin.setText("Actualizar Ticket");
+        panelTicketsAdmin.add(btnActualizarTicketAdmin, new com.intellij.uiDesigner.core.GridConstraints(4, 1, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        btnListarTicketsAdmin = new JButton();
+        btnListarTicketsAdmin.setText("Listar Todos");
+        panelTicketsAdmin.add(btnListarTicketsAdmin, new com.intellij.uiDesigner.core.GridConstraints(5, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        btnEliminarTicketAdmin = new JButton();
+        btnEliminarTicketAdmin.setText("Eliminar Ticket");
+        panelTicketsAdmin.add(btnEliminarTicketAdmin, new com.intellij.uiDesigner.core.GridConstraints(5, 1, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
     }
 
     /**

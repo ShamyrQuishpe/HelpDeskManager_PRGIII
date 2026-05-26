@@ -152,6 +152,21 @@ public class TicketDAO {
             e.printStackTrace();
         }
     }
+    
+    // CAMBIAR ESTADO Y PRIORIDAD
+    public void cambiarEstadoYPrioridad(int idTicket, String estado, String prioridad){
+        try{
+            String sql = "UPDATE tickets SET estado = ?, prioridad = ? WHERE id_ticket = ?";
+            PreparedStatement ps = conexion.prepareStatement(sql);
+            ps.setString(1, estado);
+            ps.setString(2, prioridad);
+            ps.setInt(3, idTicket);
+            ps.executeUpdate();
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
+    }
 
     // ELIMINAR
     public void eliminarTicket(int idTicket){
