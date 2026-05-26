@@ -9,6 +9,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class VentanaTecnico {
+
     public JPanel panelTecnico;
     private JTabbedPane tabbedPane1;
     private JLabel lblNombre;
@@ -19,27 +20,32 @@ public class VentanaTecnico {
     private Usuario usuario;
     private boolean editando = false;
 
+    // CONSTRUCTOR
     public VentanaTecnico(Usuario usuario) {
+
         this.usuario = usuario;
 
-        // Cargar datos usuario
+        // Cargar datos
         cargarDatos();
 
         // Bloquear campos inicialmente
         bloquearCampos();
-        btnActualizarTecnico.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
 
-            }
-        });
+        // BOTÓN ACTUALIZAR
+        btnActualizarTecnico.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        actualizarDatos();
+                    }
+                });
     }
 
-    // Mostrar datos usuario
-
+    // MOSTRAR DATOS
     private void cargarDatos() {
 
-        lblNombre.setText("Bienvenid@ " + usuario.getNombre());
+        lblNombre.setText("Bienvenid@ " +
+                usuario.getNombre());
 
         txtNombreTecnico.setText(usuario.getNombre());
 
@@ -48,7 +54,7 @@ public class VentanaTecnico {
         txtContrasenaTecnico.setText(usuario.getPassword());
     }
 
-    // Bloquear campos
+    // BLOQUEAR CAMPOS
     private void bloquearCampos() {
 
         txtNombreTecnico.setEditable(false);
@@ -58,7 +64,7 @@ public class VentanaTecnico {
         txtContrasenaTecnico.setEditable(false);
     }
 
-    // Desbloquear campos
+    // DESBLOQUEAR CAMPOS
     private void desbloquearCampos() {
 
         txtNombreTecnico.setEditable(true);
@@ -68,7 +74,7 @@ public class VentanaTecnico {
         txtContrasenaTecnico.setEditable(true);
     }
 
-    // Actualizar datos usuario
+    // ACTUALIZAR DATOS
     private void actualizarDatos() {
 
         // PRIMER CLICK
@@ -84,12 +90,10 @@ public class VentanaTecnico {
 
                 btnActualizarTecnico.setText("Guardar Cambios");
             }
-
         }
 
         // SEGUNDO CLICK
         else {
-
             usuario.setNombre(txtNombreTecnico.getText());
 
             usuario.setCorreo(txtCorreoTecnico.getText());
@@ -100,10 +104,7 @@ public class VentanaTecnico {
 
             usuarioDAO.actualizar(usuario);
 
-            lblNombre.setText(
-                    "Bienvenid@ " +
-                            usuario.getNombre()
-            );
+            lblNombre.setText("Bienvenid@ " + usuario.getNombre());
 
             bloquearCampos();
 
@@ -160,9 +161,12 @@ public class VentanaTecnico {
         btnActualizarTecnico = new JButton();
         btnActualizarTecnico.setText("Actualizar Datos");
         panel1.add(btnActualizarTecnico, new com.intellij.uiDesigner.core.GridConstraints(5, 0, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        lblNombre = new JLabel();
+        lblNombre.setText("Label");
+        panel1.add(lblNombre, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JPanel panel2 = new JPanel();
         panel2.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
-        tabbedPane1.addTab("Crear tickets", panel2);
+        tabbedPane1.addTab("Solventar tickets", panel2);
     }
 
     /**
@@ -171,5 +175,4 @@ public class VentanaTecnico {
     public JComponent $$$getRootComponent$$$() {
         return panelTecnico;
     }
-
 }
