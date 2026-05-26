@@ -28,6 +28,7 @@ public class VentanaAdmin {
     private JButton buscarPorIDButton;
     private JComboBox cmbRolUsuario;
     private JComboBox cmbRolUsuarioMod;
+    private JTabbedPane tabbedPane3;
 
     private Usuario usuarioActual;
 
@@ -320,6 +321,11 @@ public class VentanaAdmin {
         panel2.add(buscarPorIDButton, new com.intellij.uiDesigner.core.GridConstraints(1, 0, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         cmbRolUsuarioMod = new JComboBox();
         panel2.add(cmbRolUsuarioMod, new com.intellij.uiDesigner.core.GridConstraints(5, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        tabbedPane3 = new JTabbedPane();
+        tabbedPane1.addTab("Ticket", tabbedPane3);
+        final JPanel panel3 = new JPanel();
+        panel3.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
+        tabbedPane3.addTab("Untitled", panel3);
     }
 
     /**
@@ -328,4 +334,5 @@ public class VentanaAdmin {
     public JComponent $$$getRootComponent$$$() {
         return panelAdmin;
     }
+
 }
