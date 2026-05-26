@@ -175,7 +175,7 @@ public class VentanaAdmin {
 
             UsuarioDAO dao = new UsuarioDAO();
 
-            dao.actualizar(usuarioActual);
+            dao.actualizarAdmin(usuarioActual);
 
             bloquearCamposModificar();
 

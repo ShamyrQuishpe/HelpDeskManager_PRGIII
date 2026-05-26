@@ -168,7 +168,36 @@ public class UsuarioDAO {
             e.printStackTrace();
         }
     }
+    //Actualziar completo
+    public void actualizarAdmin(Usuario usuario){
 
+        try{
+
+            String sql = "UPDATE usuarios SET " + "nombre = ?, " + "correo = ?, " + "password = ?, " + "rol = ? " + "WHERE id_usuario = ?";
+
+            PreparedStatement ps = conexion.prepareStatement(sql);
+
+            ps.setString(1, usuario.getNombre());
+
+            ps.setString(2, usuario.getCorreo());
+
+            ps.setString(3, usuario.getPassword());
+
+            ps.setString(4, usuario.getRol());
+
+            ps.setInt(5, usuario.getIdUsuario());
+
+            ps.executeUpdate();
+
+            System.out.println(
+                    "Usuario actualizado por admin"
+            );
+        }
+        catch(Exception e){
+
+            e.printStackTrace();
+        }
+    }
     // BUSCAR POR ID
     public Usuario buscarPorId(int idUsuario){
 

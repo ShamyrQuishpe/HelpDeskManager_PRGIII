@@ -75,19 +75,14 @@ public class Login {
         }
 
         // TECNICO
-        /*else if(usuario.getRol().equals("TECNICO")) {
+        else if(usuario.getRol().equals("TECNICO")) {
 
-            VentanaTecnico ventana =
-                    new VentanaTecnico(usuario);
+            VentanaTecnico ventana = new VentanaTecnico(usuario);
 
-            frame.setTitle(
-                    "Panel Técnico"
-            );
+            frame.setTitle("Panel Técnico");
 
-            frame.setContentPane(
-                    ventana.panel1
-            );
-        }*/
+            frame.setContentPane(ventana.panelTecnico);
+        }
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 

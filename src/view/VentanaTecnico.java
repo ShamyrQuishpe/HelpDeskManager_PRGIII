@@ -8,7 +8,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class VentanaTecnico {
-    private JPanel panelTecnico;
+    public JPanel panelTecnico;
     private JTabbedPane tabbedPane1;
     private JTabbedPane tabbedPane2;
     private JLabel lblNombre;
@@ -19,7 +19,7 @@ public class VentanaTecnico {
     private Usuario usuario;
     private boolean editando = false;
 
-    public VentanaTecnico() {
+    public VentanaTecnico(Usuario usuario) {
         this.usuario = usuario;
 
         // Cargar datos usuario
@@ -73,8 +73,7 @@ public class VentanaTecnico {
         // PRIMER CLICK
         if(!editando) {
 
-            int confirmacion =
-                    JOptionPane.showConfirmDialog(null, "¿Seguro deseas modificar tus datos?", "Confirmación", JOptionPane.YES_NO_OPTION);
+            int confirmacion = JOptionPane.showConfirmDialog(null, "¿Seguro deseas modificar tus datos?", "Confirmación", JOptionPane.YES_NO_OPTION);
 
             if(confirmacion == JOptionPane.YES_OPTION) {
 
