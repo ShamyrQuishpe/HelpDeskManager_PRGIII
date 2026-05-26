@@ -1,5 +1,4 @@
-package view;
-
+import view.Login;
 import javax.swing.*;
 
 public class Main {

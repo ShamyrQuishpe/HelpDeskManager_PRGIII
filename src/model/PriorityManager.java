@@ -3,23 +3,27 @@ package model;
 import java.util.PriorityQueue;
 
 public class PriorityManager {
-    private PriorityQueue<Ticket> cola;
+
+    private PriorityQueue<Ticket> colaPrioridad;
 
     public PriorityManager(){
 
-        cola = new PriorityQueue<>();
+        colaPrioridad =
+                new PriorityQueue<>();
     }
 
-    public void agregar(Ticket ticket){
+    public void agregarTicket(Ticket ticket){
 
-        cola.add(ticket);
-
+        colaPrioridad.add(ticket);
     }
 
-    public Ticket siguienteTicket(){
+    public Ticket obtenerSiguienteTicket(){
 
-        return cola.poll();
-
+        return colaPrioridad.poll();
     }
 
+    public boolean estaVacia(){
+
+        return colaPrioridad.isEmpty();
+    }
 }
