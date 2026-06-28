@@ -60,6 +60,10 @@ public class VentanaAdmin {
 
         bloquearCamposModificar();
 
+        // Agregar pestaña de Asignaciones
+        VentanaAsignacion ventanaAsignacion = new VentanaAsignacion();
+        tabbedPane1.addTab("Asignaciones", ventanaAsignacion.panelAsignacion);
+
         btnRegistrarUsuario.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

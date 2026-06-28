@@ -94,6 +94,29 @@ public class UsuarioDAO {
 
     }
 
+    // OBTENER TECNICOS
+    public ArrayList<Usuario> obtenerTecnicos() {
+        ArrayList<Usuario> lista = new ArrayList<>();
+        try {
+            String sql = "SELECT * FROM usuarios WHERE rol = 'TECNICO'";
+            PreparedStatement ps = conexion.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Usuario u = new Usuario(
+                        rs.getInt("id_usuario"),
+                        rs.getString("nombre"),
+                        rs.getString("correo"),
+                        rs.getString("password"),
+                        rs.getString("rol")
+                );
+                lista.add(u);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return lista;
+    }
+
     // LOGIN
     public Usuario login(
             String correo,
