@@ -15,12 +15,12 @@ public class TicketDAO {
     }
 
     // CREAR TICKET
-    public void crearTicket(Ticket ticket){
+    public int crearTicket(Ticket ticket){
         try{
 
             String sql = "INSERT INTO tickets(" + "titulo,descripcion,categoria," + "prioridad,estado,fecha_creacion,id_usuario" + ") VALUES(?,?,?,?,?,?,?)";
 
-            PreparedStatement ps = conexion.prepareStatement(sql);
+            PreparedStatement ps = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 
             ps.setString(1, ticket.getTitulo());
 
@@ -41,10 +41,18 @@ public class TicketDAO {
 
             System.out.println("Ticket creado");
 
+            ResultSet rs = ps.getGeneratedKeys();
+
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+
         }
         catch(Exception e){
             e.printStackTrace();
         }
+
+        return 0;
     }
 
     // LISTAR TODOS

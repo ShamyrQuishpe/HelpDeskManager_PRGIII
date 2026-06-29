@@ -1,8 +1,11 @@
 package view;
 
 import javax.swing.*;
+import dao.AsignacionDAO;
 import dao.SeguimientoDAO;
 import dao.UsuarioDAO;
+import model.Asignacion;
+import model.PriorityManager;
 import model.Seguimiento;
 import model.Usuario;
 import dao.TicketDAO;
@@ -248,8 +251,14 @@ public class VentanaUsuario {
                 usuario.getIdUsuario()
         );
 
-        ticketDAO.crearTicket(nuevoTicket);
-        JOptionPane.showMessageDialog(null, "Ticket enviado correctamente.");
+        int idTicketCreado = ticketDAO.crearTicket(nuevoTicket);
+        Usuario tecnicoAsignado = asignarTicketAutomaticamente(idTicketCreado);
+
+        if (tecnicoAsignado != null) {
+            JOptionPane.showMessageDialog(null, "Ticket enviado correctamente. Asignado al tÃ©cnico: " + tecnicoAsignado.getNombre());
+        } else {
+            JOptionPane.showMessageDialog(null, "Ticket enviado correctamente. No hay tÃ©cnicos disponibles para asignarlo automÃ¡ticamente.");
+        }
 
         // Limpiar formulario
         txtTitulo.setText("");
@@ -259,6 +268,32 @@ public class VentanaUsuario {
 
         // Actualizar la lista
         cargarTickets();
+    }
+
+    private Usuario asignarTicketAutomaticamente(int idTicket) {
+        if (idTicket <= 0) {
+            return null;
+        }
+
+        UsuarioDAO usuarioDAO = new UsuarioDAO();
+        ArrayList<Usuario> tecnicos = usuarioDAO.obtenerTecnicos();
+
+        if (tecnicos.isEmpty()) {
+            return null;
+        }
+
+        PriorityManager priorityManager = new PriorityManager();
+        Usuario tecnicoSeleccionado = priorityManager.seleccionarTecnicoDisponible(tecnicos, ticketDAO);
+
+        if (tecnicoSeleccionado == null) {
+            return null;
+        }
+
+        AsignacionDAO asignacionDAO = new AsignacionDAO();
+        Asignacion asignacion = new Asignacion(0, idTicket, tecnicoSeleccionado.getIdUsuario(), LocalDateTime.now());
+        asignacionDAO.crearAsignacion(asignacion);
+
+        return tecnicoSeleccionado;
     }
 
     private void cargarSeguimientosUsuario() {
