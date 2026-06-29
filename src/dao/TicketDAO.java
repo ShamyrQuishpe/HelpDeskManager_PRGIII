@@ -136,6 +136,50 @@ public class TicketDAO {
         return lista;
     }
 
+    // TICKETS ASIGNADOS A TECNICO
+    public ArrayList<Ticket> obtenerTicketsAsignadosTecnico(int idTecnico) {
+        ArrayList<Ticket> lista = new ArrayList<>();
+
+        try {
+            String sql = "SELECT t.* FROM tickets t " +
+                    "INNER JOIN asignaciones a ON t.id_ticket = a.id_ticket " +
+                    "WHERE a.id_tecnico = ?";
+
+            PreparedStatement ps = conexion.prepareStatement(sql);
+
+            ps.setInt(1, idTecnico);
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                Ticket t = new Ticket(
+                        rs.getInt("id_ticket"),
+
+                        rs.getString("titulo"),
+
+                        rs.getString("descripcion"),
+
+                        rs.getString("categoria"),
+
+                        rs.getString("prioridad"),
+
+                        rs.getString("estado"),
+
+                        rs.getTimestamp("fecha_creacion").toLocalDateTime(),
+
+                        rs.getInt("id_usuario")
+                );
+
+                lista.add(t);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return lista;
+    }
+
     // CAMBIAR ESTADO
     public void cambiarEstado(
             int idTicket,

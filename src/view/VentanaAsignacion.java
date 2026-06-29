@@ -39,13 +39,13 @@ public class VentanaAsignacion {
         cargarTecnicosCmb();
 
         // LISTAR ASIGNACIONES AL INICIO
-        listarAsignaciones();
+        listarTicketsParaAsignar();
 
         // EVENTOS
         btnListar.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                listarAsignaciones();
+                listarTicketsParaAsignar();
             }
         });
 
@@ -96,7 +96,14 @@ public class VentanaAsignacion {
                         String idTicketStr = ticketPart.substring(ticketPart.indexOf("Ticket ID:") + 10, ticketPart.indexOf("(")).trim();
                         txtIdTicket.setText(idTicketStr);
 
+                        if (!seleccion.contains("T") || !seleccion.contains("ID:") || seleccion.split("\\|").length < 2) {
+                            return;
+                        }
+
                         String tecnicoPart = seleccion.split("\\|")[1].trim();
+                        if (!tecnicoPart.contains("ID:")) {
+                            return;
+                        }
                         String tecnicoInfo = tecnicoPart.replace("Técnico ID:", "").trim();
 
                         for (int i = 0; i < cmbTecnico.getItemCount(); i++) {
@@ -165,13 +172,13 @@ public class VentanaAsignacion {
                     Asignacion nuevaAsignacion = new Asignacion(0, idTicket, idTecnico, LocalDateTime.now());
                     asignacionDAO.actualizarAsignacion(nuevaAsignacion);
                     JOptionPane.showMessageDialog(null, "Asignación actualizada (ticket reasignado).");
-                    listarAsignaciones();
+                    listarTicketsParaAsignar();
                 }
             } else {
                 Asignacion nuevaAsignacion = new Asignacion(0, idTicket, idTecnico, LocalDateTime.now());
                 asignacionDAO.crearAsignacion(nuevaAsignacion);
                 JOptionPane.showMessageDialog(null, "Técnico asignado correctamente.");
-                listarAsignaciones();
+                listarTicketsParaAsignar();
             }
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(null, "Por favor, ingrese un ID de ticket válido (número).");
@@ -206,7 +213,7 @@ public class VentanaAsignacion {
                 Asignacion nuevaAsignacion = new Asignacion(0, idTicket, idTecnico, LocalDateTime.now());
                 asignacionDAO.actualizarAsignacion(nuevaAsignacion);
                 JOptionPane.showMessageDialog(null, "Asignación actualizada correctamente.");
-                listarAsignaciones();
+                listarTicketsParaAsignar();
             }
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(null, "Por favor, ingrese un ID de ticket válido (número).");
@@ -232,12 +239,45 @@ public class VentanaAsignacion {
             if (confirmacion == JOptionPane.YES_OPTION) {
                 asignacionDAO.eliminarAsignacion(idTicket);
                 JOptionPane.showMessageDialog(null, "Asignación eliminada correctamente.");
-                listarAsignaciones();
+                listarTicketsParaAsignar();
                 txtIdTicket.setText("");
             }
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(null, "Por favor, ingrese un ID de ticket válido (número).");
         }
+    }
+
+    private void listarTicketsParaAsignar() {
+        TicketDAO ticketDAO = new TicketDAO();
+        AsignacionDAO asignacionDAO = new AsignacionDAO();
+        UsuarioDAO usuarioDAO = new UsuarioDAO();
+
+        ArrayList<Ticket> todosTickets = ticketDAO.obtenerTickets();
+        DefaultListModel modelo = new DefaultListModel();
+
+        for (Ticket t : todosTickets) {
+            Asignacion asignacion = asignacionDAO.obtenerAsignacionPorTicket(t.getIdTicket());
+            String info = "Ticket ID: " + t.getIdTicket() + " (" + t.getTitulo() + ")";
+
+            if (asignacion != null) {
+                String nombreTecnico = "Desconocido";
+                Usuario tecnico = usuarioDAO.buscarPorId(asignacion.getIdTecnico());
+                if (tecnico != null) {
+                    nombreTecnico = tecnico.getNombre();
+                }
+
+                info += " | Técnico ID: " + asignacion.getIdTecnico() + " - " + nombreTecnico;
+            } else {
+                info += " Sin asignar";
+            }
+
+            info += " | Prioridad: " + t.getPrioridad() +
+                    " | Estado: " + t.getEstado();
+
+            modelo.addElement(info);
+        }
+
+        lstAsignaciones.setModel(modelo);
     }
 
     private void listarAsignaciones() {
@@ -396,7 +436,7 @@ public class VentanaAsignacion {
         btnActualizar.setText("Actualizar Asignación");
         panelGestion.add(btnActualizar, new com.intellij.uiDesigner.core.GridConstraints(5, 1, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         btnListar = new JButton();
-        btnListar.setText("Listar Asignaciones");
+        btnListar.setText("Listar Tickets");
         panelGestion.add(btnListar, new com.intellij.uiDesigner.core.GridConstraints(6, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         btnDesasignar = new JButton();
         btnDesasignar.setText("Quitar Asignación");

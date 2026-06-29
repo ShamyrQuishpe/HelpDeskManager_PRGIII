@@ -1,6 +1,8 @@
 package view;
 
+import dao.SeguimientoDAO;
 import dao.UsuarioDAO;
+import model.Seguimiento;
 import model.Usuario;
 import dao.TicketDAO;
 import model.Ticket;
@@ -9,6 +11,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -41,8 +44,20 @@ public class VentanaAdmin {
     private JButton btnActualizarTicketAdmin;
     private JButton btnListarTicketsAdmin;
     private JButton btnEliminarTicketAdmin;
+    private JPanel panelSeguimientoAdmin;
+    private JList lstSeguimientoAdmin;
+    private JTextField txtIdSeguimientoAdmin;
+    private JTextArea txtComentarioSeguimientoAdmin;
+    private JTextField txtIdTicketSeguimientoAdmin;
+    private JTextField txtIdUsuarioSeguimientoAdmin;
+    private JButton btnListarSeguimientoAdmin;
+    private JButton btnBuscarSeguimientoAdmin;
+    private JButton btnCrearSeguimientoAdmin;
+    private JButton btnActualizarSeguimientoAdmin;
+    private JButton btnEliminarSeguimientoAdmin;
     private Ticket ticketActual;
     private boolean editandoTicket = false;
+    private Seguimiento seguimientoActual;
 
     private Usuario usuarioActual;
 
@@ -149,6 +164,53 @@ public class VentanaAdmin {
                     } catch (Exception ex) {
                         System.out.println("No se pudo extraer el ID del texto seleccionado.");
                     }
+                }
+            }
+        });
+
+        cargarSeguimientosAdmin();
+
+        btnListarSeguimientoAdmin.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cargarSeguimientosAdmin();
+            }
+        });
+
+        btnBuscarSeguimientoAdmin.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                buscarSeguimientoAdmin();
+            }
+        });
+
+        btnCrearSeguimientoAdmin.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                crearSeguimientoAdmin();
+            }
+        });
+
+        btnActualizarSeguimientoAdmin.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                actualizarSeguimientoAdmin();
+            }
+        });
+
+        btnEliminarSeguimientoAdmin.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                eliminarSeguimientoAdmin();
+            }
+        });
+
+        lstSeguimientoAdmin.addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (!e.getValueIsAdjusting() && lstSeguimientoAdmin.getSelectedValue() != null) {
+                    seguimientoActual = (Seguimiento) lstSeguimientoAdmin.getSelectedValue();
+                    mostrarSeguimientoAdmin();
                 }
             }
         });
@@ -442,6 +504,124 @@ public class VentanaAdmin {
         }
     }
 
+    private void cargarSeguimientosAdmin() {
+        SeguimientoDAO dao = new SeguimientoDAO();
+        ArrayList<Seguimiento> lista = dao.obtenerTodos();
+        DefaultListModel modelo = new DefaultListModel();
+
+        for (Seguimiento s : lista) {
+            modelo.addElement(s);
+        }
+
+        lstSeguimientoAdmin.setModel(modelo);
+    }
+
+    private void mostrarSeguimientoAdmin() {
+        txtIdSeguimientoAdmin.setText(String.valueOf(seguimientoActual.getIdSeguimiento()));
+        txtComentarioSeguimientoAdmin.setText(seguimientoActual.getComentario());
+        txtIdTicketSeguimientoAdmin.setText(String.valueOf(seguimientoActual.getIdTicket()));
+        txtIdUsuarioSeguimientoAdmin.setText(String.valueOf(seguimientoActual.getIdUsuario()));
+    }
+
+    private void buscarSeguimientoAdmin() {
+        try {
+            int idSeguimiento = Integer.parseInt(txtIdSeguimientoAdmin.getText().trim());
+            SeguimientoDAO dao = new SeguimientoDAO();
+            seguimientoActual = dao.buscarPorId(idSeguimiento);
+
+            if (seguimientoActual != null) {
+                mostrarSeguimientoAdmin();
+                JOptionPane.showMessageDialog(null, "Seguimiento encontrado");
+            } else {
+                JOptionPane.showMessageDialog(null, "Seguimiento no encontrado");
+            }
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(null, "Ingresa un ID de seguimiento válido.");
+        }
+    }
+
+    private void crearSeguimientoAdmin() {
+        try {
+            String comentario = txtComentarioSeguimientoAdmin.getText().trim();
+
+            if (comentario.isEmpty()) {
+                JOptionPane.showMessageDialog(null, "Ingresa un comentario.");
+                return;
+            }
+
+            int idTicket = Integer.parseInt(txtIdTicketSeguimientoAdmin.getText().trim());
+            int idUsuario = Integer.parseInt(txtIdUsuarioSeguimientoAdmin.getText().trim());
+
+            SeguimientoDAO dao = new SeguimientoDAO();
+            boolean guardado = dao.registrarSeguimiento(comentario, LocalDateTime.now(), idTicket, idUsuario);
+
+            if (guardado) {
+                JOptionPane.showMessageDialog(null, "Seguimiento creado correctamente.");
+                limpiarSeguimientoAdmin();
+                cargarSeguimientosAdmin();
+            } else {
+                JOptionPane.showMessageDialog(null, "No se pudo crear el seguimiento.");
+            }
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(null, "ID Ticket e ID Usuario deben ser numeros.");
+        }
+    }
+
+    private void actualizarSeguimientoAdmin() {
+        try {
+            if (txtIdSeguimientoAdmin.getText().trim().isEmpty()) {
+                JOptionPane.showMessageDialog(null, "Busca o selecciona un seguimiento primero.");
+                return;
+            }
+
+            int idSeguimiento = Integer.parseInt(txtIdSeguimientoAdmin.getText().trim());
+            String comentario = txtComentarioSeguimientoAdmin.getText().trim();
+
+            if (comentario.isEmpty()) {
+                JOptionPane.showMessageDialog(null, "Ingresa un comentario.");
+                return;
+            }
+
+            int idTicket = Integer.parseInt(txtIdTicketSeguimientoAdmin.getText().trim());
+            int idUsuario = Integer.parseInt(txtIdUsuarioSeguimientoAdmin.getText().trim());
+
+            Seguimiento seguimiento = new Seguimiento(idSeguimiento, comentario, LocalDateTime.now(), idTicket, idUsuario);
+            SeguimientoDAO dao = new SeguimientoDAO();
+            dao.actualizarSeguimiento(seguimiento);
+
+            JOptionPane.showMessageDialog(null, "Seguimiento actualizado correctamente.");
+            cargarSeguimientosAdmin();
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(null, "Revisa los IDs numericos.");
+        }
+    }
+
+    private void eliminarSeguimientoAdmin() {
+        try {
+            int idSeguimiento = Integer.parseInt(txtIdSeguimientoAdmin.getText().trim());
+            int confirmacion = JOptionPane.showConfirmDialog(null, "¿Seguro deseas eliminar este seguimiento?", "ConfirmaciÃ³n", JOptionPane.YES_NO_OPTION);
+
+            if (confirmacion == JOptionPane.YES_OPTION) {
+                SeguimientoDAO dao = new SeguimientoDAO();
+                dao.eliminarSeguimiento(idSeguimiento);
+
+                JOptionPane.showMessageDialog(null, "Seguimiento eliminado.");
+                limpiarSeguimientoAdmin();
+                cargarSeguimientosAdmin();
+            }
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(null, "Ingresa un ID de seguimiento válido.");
+        }
+    }
+
+    private void limpiarSeguimientoAdmin() {
+        seguimientoActual = null;
+        txtIdSeguimientoAdmin.setText("");
+        txtComentarioSeguimientoAdmin.setText("");
+        txtIdTicketSeguimientoAdmin.setText("");
+        txtIdUsuarioSeguimientoAdmin.setText("");
+    }
+
 
     {
 // GUI initializer generated by IntelliJ IDEA GUI Designer
@@ -567,6 +747,50 @@ public class VentanaAdmin {
         btnEliminarTicketAdmin = new JButton();
         btnEliminarTicketAdmin.setText("Eliminar Ticket");
         panelTicketsAdmin.add(btnEliminarTicketAdmin, new com.intellij.uiDesigner.core.GridConstraints(5, 1, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panelSeguimientoAdmin = new JPanel();
+        panelSeguimientoAdmin.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(8, 3, new Insets(10, 10, 10, 10), -1, -1));
+        tabbedPane1.addTab("Seguimiento", panelSeguimientoAdmin);
+        final JScrollPane scrollPane2 = new JScrollPane();
+        panelSeguimientoAdmin.add(scrollPane2, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 7, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(260, 150), null, 0, false));
+        lstSeguimientoAdmin = new JList();
+        scrollPane2.setViewportView(lstSeguimientoAdmin);
+        final JLabel label13 = new JLabel();
+        label13.setText("ID Seguimiento:");
+        panelSeguimientoAdmin.add(label13, new com.intellij.uiDesigner.core.GridConstraints(0, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        txtIdSeguimientoAdmin = new JTextField();
+        panelSeguimientoAdmin.add(txtIdSeguimientoAdmin, new com.intellij.uiDesigner.core.GridConstraints(0, 2, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        final JLabel label14 = new JLabel();
+        label14.setText("ID Ticket:");
+        panelSeguimientoAdmin.add(label14, new com.intellij.uiDesigner.core.GridConstraints(1, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        txtIdTicketSeguimientoAdmin = new JTextField();
+        panelSeguimientoAdmin.add(txtIdTicketSeguimientoAdmin, new com.intellij.uiDesigner.core.GridConstraints(1, 2, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        final JLabel label15 = new JLabel();
+        label15.setText("ID Usuario:");
+        panelSeguimientoAdmin.add(label15, new com.intellij.uiDesigner.core.GridConstraints(2, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        txtIdUsuarioSeguimientoAdmin = new JTextField();
+        panelSeguimientoAdmin.add(txtIdUsuarioSeguimientoAdmin, new com.intellij.uiDesigner.core.GridConstraints(2, 2, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        final JLabel label16 = new JLabel();
+        label16.setText("Comentario:");
+        panelSeguimientoAdmin.add(label16, new com.intellij.uiDesigner.core.GridConstraints(3, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JScrollPane scrollPane3 = new JScrollPane();
+        panelSeguimientoAdmin.add(scrollPane3, new com.intellij.uiDesigner.core.GridConstraints(3, 2, 2, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(150, 80), null, 0, false));
+        txtComentarioSeguimientoAdmin = new JTextArea();
+        scrollPane3.setViewportView(txtComentarioSeguimientoAdmin);
+        btnBuscarSeguimientoAdmin = new JButton();
+        btnBuscarSeguimientoAdmin.setText("Buscar por ID");
+        panelSeguimientoAdmin.add(btnBuscarSeguimientoAdmin, new com.intellij.uiDesigner.core.GridConstraints(5, 1, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        btnCrearSeguimientoAdmin = new JButton();
+        btnCrearSeguimientoAdmin.setText("Crear");
+        panelSeguimientoAdmin.add(btnCrearSeguimientoAdmin, new com.intellij.uiDesigner.core.GridConstraints(6, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        btnActualizarSeguimientoAdmin = new JButton();
+        btnActualizarSeguimientoAdmin.setText("Actualizar");
+        panelSeguimientoAdmin.add(btnActualizarSeguimientoAdmin, new com.intellij.uiDesigner.core.GridConstraints(6, 2, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        btnListarSeguimientoAdmin = new JButton();
+        btnListarSeguimientoAdmin.setText("Listar Seguimiento");
+        panelSeguimientoAdmin.add(btnListarSeguimientoAdmin, new com.intellij.uiDesigner.core.GridConstraints(7, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        btnEliminarSeguimientoAdmin = new JButton();
+        btnEliminarSeguimientoAdmin.setText("Eliminar");
+        panelSeguimientoAdmin.add(btnEliminarSeguimientoAdmin, new com.intellij.uiDesigner.core.GridConstraints(7, 1, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
     }
 
     /**
