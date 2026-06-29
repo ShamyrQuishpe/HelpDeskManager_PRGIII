@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class ReporteDAO {
+public class   ReporteDAO {
 
     private Connection conexion;
 

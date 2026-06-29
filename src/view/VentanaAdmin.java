@@ -1,5 +1,6 @@
 package view;
 
+import dao.ReporteDAO;
 import dao.SeguimientoDAO;
 import dao.UsuarioDAO;
 import model.Seguimiento;
@@ -11,10 +12,13 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Map;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.table.DefaultTableModel;
 
 public class VentanaAdmin {
     private JTabbedPane tabbedPane1;
@@ -55,6 +59,17 @@ public class VentanaAdmin {
     private JButton btnCrearSeguimientoAdmin;
     private JButton btnActualizarSeguimientoAdmin;
     private JButton btnEliminarSeguimientoAdmin;
+    private JPanel panelReportesAdmin;
+    private JTextField txtFechaInicioReporte;
+    private JTextField txtFechaFinReporte;
+    private JButton btnGenerarReporte;
+    private JLabel lblTotalTicketsReporte;
+    private JLabel lblAbiertosReporte;
+    private JLabel lblCerradosReporte;
+    private JLabel lblSeguimientosReporte;
+    private JLabel lblPromedioResolucionReporte;
+    private JTable tblReporteTecnicos;
+    private JTable tblReporteResumen;
     private Ticket ticketActual;
     private boolean editandoTicket = false;
     private Seguimiento seguimientoActual;
@@ -212,6 +227,13 @@ public class VentanaAdmin {
                     seguimientoActual = (Seguimiento) lstSeguimientoAdmin.getSelectedValue();
                     mostrarSeguimientoAdmin();
                 }
+            }
+        });
+
+        btnGenerarReporte.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                generarReporteAdmin();
             }
         });
     }
@@ -622,6 +644,81 @@ public class VentanaAdmin {
         txtIdUsuarioSeguimientoAdmin.setText("");
     }
 
+    private void generarReporteAdmin() {
+        try {
+            LocalDate fechaInicio = LocalDate.parse(txtFechaInicioReporte.getText().trim());
+            LocalDate fechaFin = LocalDate.parse(txtFechaFinReporte.getText().trim());
+
+            if (fechaFin.isBefore(fechaInicio)) {
+                JOptionPane.showMessageDialog(null, "La fecha fin no puede ser anterior a la fecha inicio.");
+                return;
+            }
+
+            ReporteDAO reporteDAO = new ReporteDAO();
+
+            int totalTickets = reporteDAO.contarTicketsPorRango(fechaInicio, fechaFin);
+            int abiertos = reporteDAO.contarTicketsPorEstado("ABIERTO", fechaInicio, fechaFin);
+            int cerrados = reporteDAO.contarTicketsPorEstado("CERRADO", fechaInicio, fechaFin);
+            int seguimientos = reporteDAO.contarSeguimientosPorRango(fechaInicio, fechaFin);
+            double promedioHoras = reporteDAO.obtenerTiempoPromedioResolucionHoras(fechaInicio, fechaFin);
+
+            lblTotalTicketsReporte.setText("Total tickets: " + totalTickets);
+            lblAbiertosReporte.setText("Abiertos: " + abiertos);
+            lblCerradosReporte.setText("Cerrados: " + cerrados);
+            lblSeguimientosReporte.setText("Seguimientos: " + seguimientos);
+            lblPromedioResolucionReporte.setText("Promedio resolución: " + String.format("%.2f", promedioHoras) + " horas");
+
+            cargarTablaReporteTecnicos(reporteDAO, fechaInicio, fechaFin);
+            cargarTablaReporteResumen(reporteDAO, fechaInicio, fechaFin);
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(null, "Usa fechas vÃ¡lidas con formato yyyy-MM-dd.");
+        }
+    }
+
+    private void cargarTablaReporteTecnicos(ReporteDAO reporteDAO, LocalDate fechaInicio, LocalDate fechaFin) {
+        DefaultTableModel modelo = new DefaultTableModel();
+        modelo.addColumn("Técnico");
+        modelo.addColumn("Asignados");
+        modelo.addColumn("Cerrados");
+        modelo.addColumn("Promedio horas");
+
+        Map<String, Integer> asignados = reporteDAO.contarTicketsPorTecnico(fechaInicio, fechaFin);
+        Map<String, Integer> cerrados = reporteDAO.contarTicketsCerradosPorTecnico(fechaInicio, fechaFin);
+        Map<String, Double> promedio = reporteDAO.obtenerTiempoPromedioResolucionPorTecnico(fechaInicio, fechaFin);
+
+        for (String tecnico : asignados.keySet()) {
+            Object[] fila = new Object[]{
+                    tecnico,
+                    asignados.get(tecnico),
+                    cerrados.getOrDefault(tecnico, 0),
+                    String.format("%.2f", promedio.getOrDefault(tecnico, 0.0))
+            };
+            modelo.addRow(fila);
+        }
+
+        tblReporteTecnicos.setModel(modelo);
+    }
+
+    private void cargarTablaReporteResumen(ReporteDAO reporteDAO, LocalDate fechaInicio, LocalDate fechaFin) {
+        DefaultTableModel modelo = new DefaultTableModel();
+        modelo.addColumn("Tipo");
+        modelo.addColumn("Valor");
+        modelo.addColumn("Cantidad");
+
+        Map<String, Integer> porPrioridad = reporteDAO.contarTicketsPorPrioridad(fechaInicio, fechaFin);
+        for (String prioridad : porPrioridad.keySet()) {
+            modelo.addRow(new Object[]{"Prioridad", prioridad, porPrioridad.get(prioridad)});
+        }
+
+        Map<String, Integer> porCategoria = reporteDAO.contarTicketsPorCategoria(fechaInicio, fechaFin);
+        for (String categoria : porCategoria.keySet()) {
+            modelo.addRow(new Object[]{"Categoría", categoria, porCategoria.get(categoria)});
+        }
+
+        tblReporteResumen.setModel(modelo);
+    }
+
 
     {
 // GUI initializer generated by IntelliJ IDEA GUI Designer
@@ -791,6 +888,53 @@ public class VentanaAdmin {
         btnEliminarSeguimientoAdmin = new JButton();
         btnEliminarSeguimientoAdmin.setText("Eliminar");
         panelSeguimientoAdmin.add(btnEliminarSeguimientoAdmin, new com.intellij.uiDesigner.core.GridConstraints(7, 1, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panelReportesAdmin = new JPanel();
+        panelReportesAdmin.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(8, 4, new Insets(10, 10, 10, 10), -1, -1));
+        tabbedPane1.addTab("Reportes", panelReportesAdmin);
+        final JLabel label17 = new JLabel();
+        label17.setText("Fecha inicio:");
+        panelReportesAdmin.add(label17, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        txtFechaInicioReporte = new JTextField();
+        txtFechaInicioReporte.setText("2026-01-01");
+        panelReportesAdmin.add(txtFechaInicioReporte, new com.intellij.uiDesigner.core.GridConstraints(0, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(120, -1), null, 0, false));
+        final JLabel label18 = new JLabel();
+        label18.setText("Fecha fin:");
+        panelReportesAdmin.add(label18, new com.intellij.uiDesigner.core.GridConstraints(0, 2, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        txtFechaFinReporte = new JTextField();
+        txtFechaFinReporte.setText("2026-12-31");
+        panelReportesAdmin.add(txtFechaFinReporte, new com.intellij.uiDesigner.core.GridConstraints(0, 3, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(120, -1), null, 0, false));
+        btnGenerarReporte = new JButton();
+        btnGenerarReporte.setText("Generar Reporte");
+        panelReportesAdmin.add(btnGenerarReporte, new com.intellij.uiDesigner.core.GridConstraints(1, 0, 1, 4, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        lblTotalTicketsReporte = new JLabel();
+        lblTotalTicketsReporte.setText("Total tickets: 0");
+        panelReportesAdmin.add(lblTotalTicketsReporte, new com.intellij.uiDesigner.core.GridConstraints(2, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        lblAbiertosReporte = new JLabel();
+        lblAbiertosReporte.setText("Abiertos: 0");
+        panelReportesAdmin.add(lblAbiertosReporte, new com.intellij.uiDesigner.core.GridConstraints(2, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        lblCerradosReporte = new JLabel();
+        lblCerradosReporte.setText("Cerrados: 0");
+        panelReportesAdmin.add(lblCerradosReporte, new com.intellij.uiDesigner.core.GridConstraints(2, 2, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        lblSeguimientosReporte = new JLabel();
+        lblSeguimientosReporte.setText("Seguimientos: 0");
+        panelReportesAdmin.add(lblSeguimientosReporte, new com.intellij.uiDesigner.core.GridConstraints(2, 3, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        lblPromedioResolucionReporte = new JLabel();
+        lblPromedioResolucionReporte.setText("Promedio resolución: 0 horas");
+        panelReportesAdmin.add(lblPromedioResolucionReporte, new com.intellij.uiDesigner.core.GridConstraints(3, 0, 1, 4, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label19 = new JLabel();
+        label19.setText("Reporte por técnico");
+        panelReportesAdmin.add(label19, new com.intellij.uiDesigner.core.GridConstraints(4, 0, 1, 4, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JScrollPane scrollPane4 = new JScrollPane();
+        panelReportesAdmin.add(scrollPane4, new com.intellij.uiDesigner.core.GridConstraints(5, 0, 1, 4, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(400, 120), null, 0, false));
+        tblReporteTecnicos = new JTable();
+        scrollPane4.setViewportView(tblReporteTecnicos);
+        final JLabel label20 = new JLabel();
+        label20.setText("Resumen por prioridad y categorÃ\u00ADa");
+        panelReportesAdmin.add(label20, new com.intellij.uiDesigner.core.GridConstraints(6, 0, 1, 4, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JScrollPane scrollPane5 = new JScrollPane();
+        panelReportesAdmin.add(scrollPane5, new com.intellij.uiDesigner.core.GridConstraints(7, 0, 1, 4, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(400, 120), null, 0, false));
+        tblReporteResumen = new JTable();
+        scrollPane5.setViewportView(tblReporteResumen);
     }
 
     /**
