@@ -45,11 +45,13 @@ public class VentanaTecnico {
     private SeguimientoDAO seguimientoDAO;
     private Ticket ticketSeleccionado;
     private boolean editando = false;
+    private JButton btnCerrarSesion;
 
     // CONSTRUCTOR
     public VentanaTecnico(Usuario usuario) {
 
         this.usuario = usuario;
+        agregarPestanaCerrarSesion();
 
         // Cargar datos
         cargarDatos();
@@ -109,6 +111,19 @@ public class VentanaTecnico {
                 buscarSeguimientoTecnicoPorTicket();
             }
         });
+    }
+
+    private void agregarPestanaCerrarSesion() {
+        JPanel panelCerrarSesion = new JPanel(new GridBagLayout());
+        btnCerrarSesion = new JButton("Cerrar sesion");
+        btnCerrarSesion.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                NavegacionSesion.cerrarSesion(panelTecnico);
+            }
+        });
+        panelCerrarSesion.add(btnCerrarSesion);
+        tabbedPane1.addTab("Cerrar sesion", panelCerrarSesion);
     }
 
     // MOSTRAR DATOS

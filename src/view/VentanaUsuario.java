@@ -43,9 +43,11 @@ public class VentanaUsuario {
     private boolean editando = false;
     private TicketDAO ticketDAO;
     private SeguimientoDAO seguimientoDAO;
+    private JButton btnCerrarSesion;
 
     public VentanaUsuario(Usuario usuario) {
         this.usuario = usuario;
+        agregarPestanaCerrarSesion();
 
         // Cargar datos usuario
         cargarDatos();
@@ -102,6 +104,19 @@ public class VentanaUsuario {
             }
         });
 
+    }
+
+    private void agregarPestanaCerrarSesion() {
+        JPanel panelCerrarSesion = new JPanel(new GridBagLayout());
+        btnCerrarSesion = new JButton("Cerrar sesion");
+        btnCerrarSesion.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                NavegacionSesion.cerrarSesion(panel1);
+            }
+        });
+        panelCerrarSesion.add(btnCerrarSesion);
+        tabbedPane1.addTab("Cerrar sesion", panelCerrarSesion);
     }
 
     // Mostrar datos usuario

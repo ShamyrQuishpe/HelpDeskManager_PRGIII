@@ -73,6 +73,7 @@ public class VentanaAdmin {
     private Ticket ticketActual;
     private boolean editandoTicket = false;
     private Seguimiento seguimientoActual;
+    private JButton btnCerrarSesion;
 
     private Usuario usuarioActual;
 
@@ -93,6 +94,7 @@ public class VentanaAdmin {
         // Agregar pestaña de Asignaciones
         VentanaAsignacion ventanaAsignacion = new VentanaAsignacion();
         tabbedPane1.addTab("Asignaciones", ventanaAsignacion.panelAsignacion);
+        agregarPestanaCerrarSesion();
 
         btnRegistrarUsuario.addActionListener(new ActionListener() {
             @Override
@@ -236,6 +238,19 @@ public class VentanaAdmin {
                 generarReporteAdmin();
             }
         });
+    }
+
+    private void agregarPestanaCerrarSesion() {
+        JPanel panelCerrarSesion = new JPanel(new GridBagLayout());
+        btnCerrarSesion = new JButton("Cerrar sesion");
+        btnCerrarSesion.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                NavegacionSesion.cerrarSesion(panelAdmin);
+            }
+        });
+        panelCerrarSesion.add(btnCerrarSesion);
+        tabbedPane1.addTab("Cerrar sesion", panelCerrarSesion);
     }
 
     // REGISTRAR
